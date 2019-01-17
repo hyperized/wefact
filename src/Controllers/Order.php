@@ -1,11 +1,12 @@
 <?php
 
-namespace Hyperized\Hostfact\Types;
+namespace Hyperized\Hostfact\Controllers;
 
 use Hyperized\Hostfact\HostfactAPI;
 
 /**
  * Class Order
+ *
  * @package Hyperized\Hostfact\Types
  */
 class Order extends HostfactAPI
@@ -24,7 +25,7 @@ class Order extends HostfactAPI
     ];
 
     /**
-     * @param array $input
+     * @param  array $input
      * @return array|mixed
      */
     public function process(array $input)

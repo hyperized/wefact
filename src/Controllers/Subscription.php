@@ -1,11 +1,12 @@
 <?php
 
-namespace Hyperized\Hostfact\Types;
+namespace Hyperized\Hostfact\Controllers;
 
 use Hyperized\Hostfact\HostfactAPI;
 
 /**
  * Class Subscription
+ *
  * @package Hyperized\Hostfact\Types
  */
 class Subscription extends HostfactAPI

@@ -1,14 +1,15 @@
 <?php
 
-namespace Hyperized\Hostfact\Types;
+namespace Hyperized\Hostfact\Controllers;
 
 use Hyperized\Hostfact\HostfactAPI;
 
 /**
- * Class Creditor
+ * Class Group
+ *
  * @package Hyperized\Hostfact\Types
  */
-class Creditor extends HostfactAPI
+class Group extends HostfactAPI
 {
     /**
      * @var array

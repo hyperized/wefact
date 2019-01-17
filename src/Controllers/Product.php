@@ -1,14 +1,15 @@
 <?php
 
-namespace Hyperized\Hostfact\Types;
+namespace Hyperized\Hostfact\Controllers;
 
 use Hyperized\Hostfact\HostfactAPI;
 
 /**
- * Class Group
+ * Class Product
+ *
  * @package Hyperized\Hostfact\Types
  */
-class Group extends HostfactAPI
+class Product extends HostfactAPI
 {
     /**
      * @var array
@@ -18,6 +19,6 @@ class Group extends HostfactAPI
         'delete',
         'edit',
         'list',
-        'show',
+        'show'
     ];
 }

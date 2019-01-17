@@ -1,23 +1,22 @@
 <?php
 
-namespace Hyperized\Hostfact\Types;
+namespace Hyperized\Hostfact\Controllers;
 
 use Hyperized\Hostfact\HostfactAPI;
 
 /**
- * Class Service
+ * Class Attachment
+ *
  * @package Hyperized\Hostfact\Types
  */
-class Service extends HostfactAPI
+class Attachment extends HostfactAPI
 {
     /**
      * @var array
      */
     protected $allowed = [
         'add',
-        'edit',
-        'list',
-        'show',
-        'terminate',
+        'delete',
+        'download',
     ];
 }

@@ -1,9 +1,13 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Hyperized\Hostfact;
 
+use InvalidArgumentException;
+
+
 /**
  * Class HostfactAPI
+ *
  * @package Hyperized\Hostfact
  */
 class HostfactAPI
@@ -11,74 +15,97 @@ class HostfactAPI
     /**
      * @var string
      */
-    protected $parentName = HostfactAPI::class;
+    protected $controller;
     /**
-     * @var array
+     * @var
      */
-    protected $allowed = [];
+    protected $allowed;
     /**
-     * @var mixed
-     * Set the sendRequest 'mode' based on inherited class name
+     * @var
      */
-    private $mode;
+    protected $listType;
+    /**
+     * @var
+     */
+    protected $showType;
+    /**
+     * @var
+     */
+    protected $addType;
 
     /**
      * HostfactAPI constructor.
      */
     public function __construct()
     {
-        // Check if mode is set by extended class, if not fall back to naming
-        if ($this->mode === null) {
-            // Set mode to classname, strip namespaces :)
-            $function_call = explode('\\', strtolower(\get_class($this)));
-            $this->mode = last($function_call);
-        }
+        $this->controller = $this->getController();
     }
 
     /**
-     * @param $method
-     * @param $arguments
-     *
-     * @return mixed
+     * @return string
      */
-    public function __call($method, $arguments)
+    protected function getController(): string
     {
-        // Rename functions from inhented instances from method to _method for internal use.
-        if (\get_class($this) !== $this->parentName) {
-            if (\in_array($method, $this->allowed, true)) {
-                $methodName = '_' . $method;
-                if (method_exists($this, $methodName)) {
-                    return \call_user_func_array([$this, $methodName], $arguments);
-                }
-            } else {
-                $error = 'No such method: ' . \get_class($this) . '::' . $method;
-                throw new \InvalidArgumentException($error);
-            }
-            return false;
-        }
-        return false;
+        $class = \get_class($this);
+        return strtolower(substr($class, strrpos($class, '\\') + 1));
     }
+
+    /**
+     * @param  $method
+     * @return bool
+     * @throws InvalidArgumentException
+     */
+    private function isAllowed($method): bool
+    {
+        if (!\in_array($method, $this->allowed, true)) {
+            throw new InvalidArgumentException('No such allowed method: ' . $method);
+        }
+        return true;
+    }
+
     // Generic function implementations
 
     /**
-     * @param array $input
-     *
-     * @return array|mixed
+     * @param  array $parameters
+     * @return array
+     * @throws InvalidArgumentException
      */
-    protected function _add(array $input)
+    public function show(array $parameters): array
     {
-        return $this->pseudoRequest('add', $input);
+        $this->isAllowed(__FUNCTION__);
+        return $this->sendRequest(
+            $this->controller,
+            __FUNCTION__,
+            (new $this->showType($parameters))->toArray()
+        );
     }
 
     /**
-     * @param       $action
-     * @param array $input
-     *
-     * @return array|mixed
+     * @param array $parameters
+     * @return array
      */
-    protected function pseudoRequest($action, array $input)
+    public function list(array $parameters): array
     {
-        return $this->sendRequest($this->mode, $action, $input);
+        $this->isAllowed(__FUNCTION__);
+        return $this->sendRequest(
+            $this->controller,
+            __FUNCTION__,
+            (new $this->listType($parameters))->toArray()
+        );
+    }
+
+    /**
+     * @param array $parameters
+     * @return array
+     */
+    public function add(array $parameters): array
+    {
+        $this->isAllowed(__FUNCTION__);
+        return $this->sendRequest(
+            $this->controller,
+            __FUNCTION__,
+            (new $this->addType($parameters))->toArray()
+        );
     }
 
     /**
@@ -90,20 +117,28 @@ class HostfactAPI
      */
     protected function sendRequest($controller, $action, $params)
     {
+        return [
+            $controller,
+            $action,
+            $params
+        ];
+
         if (\is_array($params)) {
             $params['api_key'] = config('Hostfact.api_v2_key');
             $params['controller'] = $controller;
             $params['action'] = $action;
         }
         $request = new CurlRequest(config('Hostfact.api_v2_url'));
-        $request->setOptionArray([
-            CURLOPT_SSL_VERIFYHOST => 2,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_TIMEOUT => config('Hostfact.api_v2_timeout'),
-            CURLOPT_POST => 1,
-            CURLOPT_POSTFIELDS => http_build_query($params),
-        ]);
+        $request->setOptionArray(
+            [
+                CURLOPT_SSL_VERIFYHOST => 2,
+                CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_RETURNTRANSFER => 1,
+                CURLOPT_TIMEOUT => config('Hostfact.api_v2_timeout'),
+                CURLOPT_POST => 1,
+                CURLOPT_POSTFIELDS => http_build_query($params),
+            ]
+        );
         $request->execute();
         $curlError = $request->getError();
         $curlResp = $request->getResponse();
@@ -114,7 +149,7 @@ class HostfactAPI
                 'action' => 'invalid',
                 'status' => 'error',
                 'date' => date('c'),
-                'errors' => [$curlError]
+                'errors' => [$curlError],
             ];
         } else {
             $result = json_decode($curlResp, true);
